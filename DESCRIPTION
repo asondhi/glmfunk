@@ -1,0 +1,11 @@
+Package: glmfunk
+Type: Package
+Title: Generalized linear models with feature and unit network kernel smoothing
+Version: 1.0
+Date: 2019-09-20
+Author: Arjun Sondhi
+Maintainer: Arjun Sondhi <asondhi@uw.edu>
+Description: Fits glm-funk models, which account for known network structure among features and observation units. Includes de-biasing procedure for high-dimensional inference.
+License: GPL-2
+Imports: Rcpp (>= 1.0.1), Matrix, glmnet, expm, flare, MASS
+LinkingTo: Rcpp, RcppArmadillo
