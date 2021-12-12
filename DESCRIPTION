@@ -7,5 +7,5 @@ Author: Arjun Sondhi
 Maintainer: Arjun Sondhi <asondhi@uw.edu>
 Description: Fits glm-funk models, which account for known network structure among features and observation units. Includes de-biasing procedure for high-dimensional inference.
 License: GPL-2
-Imports: Rcpp (>= 1.0.1), Matrix, glmnet, expm, flare, MASS
+Imports: Rcpp (>= 1.0.1), Matrix, glmnet, expm, flare, MASS, scalreg
 LinkingTo: Rcpp, RcppArmadillo

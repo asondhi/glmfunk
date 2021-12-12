@@ -1,6 +1,6 @@
-# Functions to fit borg-genlasso models: training, prediction, cross-validation
+# Functions to fit funk-l1 models: training, prediction, cross-validation
 
-funkl1.fit = function(y, X, Ln, Lp, reg_params, model = c("linear", "logistic"), mu = 1e-03, theta_init = NULL, tol = 1e-06, max_iter = 1e6, verbose = FALSE) {
+funkl1.fit = function(y, X, Ln, Lp, reg_params, model = c("linear", "logistic", "poisson"), mu = 1e-03, theta_init = NULL, tol = 1e-06, max_iter = 1e6, verbose = FALSE) {
   
   n = nrow(X)
   p = ncol(X)
@@ -16,14 +16,23 @@ funkl1.fit = function(y, X, Ln, Lp, reg_params, model = c("linear", "logistic"),
   Ln = Ln + 0.01*diag(n)
   
   Xtilde = cbind(diag(n), X)
+  
+  if (model == "poisson") {
+    XX_eigen = max(eigen(t(Xtilde)%*%Xtilde)$values)
+    Lpart = base::norm(gamma_n*Ln, "2") + base::norm(gamma_p*Lp, "2")^2/mu
+    thetahat = as.numeric(funk_l1_poisson_fit(y_m, X, gamma_n*Ln, gamma_p*Lp, lambda, mu, XX_eigen, Lpart, theta_init_m, tol, max_iter, verbose))
+  }
+  
   if (model == "logistic") {
     L = 0.25*max(eigen(t(Xtilde)%*%Xtilde)$values) + base::norm(gamma_n*Ln, "2") + base::norm(gamma_p*Lp, "2")^2/mu
     thetahat = as.numeric(funk_l1_logistic_fit(y_m, X, gamma_n*Ln, gamma_p*Lp, lambda, mu, L, theta_init_m, tol, max_iter, verbose))
   }
+  
   if (model == "linear") {
     L = max(eigen(t(Xtilde)%*%Xtilde)$values) + base::norm(gamma_n*Ln, "2") + base::norm(gamma_p*Lp, "2")^2/mu
     thetahat = as.numeric(funk_l1_linear_fit(y_m, X, gamma_n*Ln, gamma_p*Lp, lambda, mu, L, theta_init_m, tol, max_iter, verbose))
   }  
+  
   alphahat = thetahat[1:n]
   betahat = thetahat[(n+1):(n+p)]
   
@@ -52,15 +61,25 @@ funkl1.predict = function(funkout, Xtest, Ln_full, train_ind) {
   alphatest = as.numeric(-ginv(Ln_22) %*% Ln_21 %*% alphatrain)
   
   eta.test = alphatest + as.numeric(Xtest%*%funkout$betahat)
+  
+  if (funkout$model == "poisson") {
+    out = exp(eta.test)
+  }  
+  
   if (funkout$model == "logistic") {
     out = plogis(eta.test)
   }
+  
   if (funkout$model == "linear") {
     out = eta.test
   }
   
   return(out)
 }
+
+poisson_loss = function(y, yhat) {
+  mean( yhat - y * log(yhat) )
+} 
 
 logistic_dev = function(y, probs) {
   probs[probs > (1-1e-6)] = 1-(1e-6)
@@ -70,7 +89,7 @@ logistic_dev = function(y, probs) {
 
 # CV for a single training-testing split over a parameter grid, with warm starts
 # Grid should have two parameters constant, third one varying and descending 
-funkl1.cv.single = function(y, X, Ln, Lp, reg_grid, train_ind, model = c("linear", "logistic")) {
+funkl1.cv.single = function(y, X, Ln, Lp, reg_grid, train_ind, model = c("linear", "logistic", "poisson")) {
   
   n = nrow(X)
   test_ind = setdiff(1:n, train_ind)
@@ -82,6 +101,7 @@ funkl1.cv.single = function(y, X, Ln, Lp, reg_grid, train_ind, model = c("linear
   
   err.ests = numeric(nrow(reg_grid))
   for (i in 1:nrow(reg_grid)) {
+    
     reg_i = reg_grid[i,]
     if (i == 1) {
       funk.m = funkl1.fit(ytrain, Xtrain, Lntrain, Lp, reg_i, model)
@@ -92,18 +112,24 @@ funkl1.cv.single = function(y, X, Ln, Lp, reg_grid, train_ind, model = c("linear
     }
     pred = funkl1.predict(funk.m, Xtest, Ln, train_ind)
     
+    if (model == "poisson") {
+      err.ests[i] = poisson_loss(ytest, pred)
+    }
+    
     if (model == "logistic") {
       err.ests[i] = logistic_dev(ytest, pred)
     }
+    
     if (model == "linear") {
       err.ests[i] = mean((ytest - pred)^2)
     }
+    
   }
   return(err.ests)  
 }
 
 # Wrap around above, do K times
-funkl1.cv.Kfold = function(y, X, Ln, Lp, reg_grid, foldind, model = c("linear", "logistic")) {
+funkl1.cv.Kfold = function(y, X, Ln, Lp, reg_grid, foldind, model = c("linear", "logistic", "poisson")) {
   n = nrow(X)
   nfolds = max(foldind)
   cv.ests = matrix(nrow = nrow(reg_grid), ncol = nfolds)
@@ -114,7 +140,7 @@ funkl1.cv.Kfold = function(y, X, Ln, Lp, reg_grid, foldind, model = c("linear", 
   return(rowMeans(cv.ests))
 }
 
-funkl1.cv.coorddesc = function(y, X, Ln, Lp, param_list, model = c("linear", "logistic"), nfolds = 5, verb.cv = FALSE) {
+funkl1.cv.coorddesc = function(y, X, Ln, Lp, param_list, model = c("linear", "logistic", "poisson"), nfolds = 5, verb.cv = FALSE) {
   # coordinate descent with warm starts
   n = nrow(X)
   foldind = sample(nfolds, size = n, replace = TRUE) # change to be exactly n/K equal?

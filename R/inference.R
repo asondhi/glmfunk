@@ -1,3 +1,52 @@
+# Debias test for Poisson regression with individual intercepts alpha; theta = (alpha, beta)'
+debias.poisson.funk = function(y, X, thetahat) {
+  
+  n = length(y)
+  p = ncol(X)
+  Xtilde = cbind(diag(n), X)
+  betahat = thetahat[-(1:n)]
+  
+  # Gradient term
+  mu.est = exp(as.numeric(Xtilde%*%thetahat))
+  grad.est = as.numeric(t(X)%*%(y - mu.est))/n
+  
+  # Hessian term
+  W.est = diag(mu.est)
+  sigmahat.est = t(X)%*%W.est%*%X/n
+  M.est = InverseLinfty(sigma = sigmahat.est, n = n, resol=1.5, mu=NULL, maxiter=50, threshold=1e-2, verbose = FALSE)
+  
+  # Asymptotic covariance matrix 
+  cov.est = M.est%*%sigmahat.est%*%t(M.est)
+  
+  beta.db = betahat + M.est%*%grad.est
+  ts = as.numeric(sqrt(n)*beta.db/sqrt(diag(cov.est)))
+  return(ts)
+}
+
+
+# Debias test for Poisson regression with ordinary lasso
+debias.poisson.lasso = function(y, X, betahat) {
+  
+  n = length(y)
+  p = ncol(X)
+
+  # Gradient term
+  mu.lasso = exp(as.numeric(Xtilde%*%thetahat))
+  grad.lasso = as.numeric(t(X)%*%(y - mu.lasso))/n
+
+  # Hessian term
+  W.lasso = diag(mu.lasso)
+  sigmahat.lasso = t(X)%*%W.lasso%*%X/n
+  M.lasso = InverseLinfty(sigma = sigmahat.lasso, n = n, resol=1.5, mu=NULL, maxiter=50, threshold=1e-2, verbose = FALSE)
+
+  # Asymptotic covariance matrix 
+  cov.est = M.lasso%*%sigmahat.lasso%*%t(M.lasso)
+
+  beta.db = betahat + M.lasso%*%grad.lasso
+  ts = as.numeric(sqrt(n)*beta.db/sqrt(diag(cov.est)))
+  return(ts)
+}
+
 
 # Debias test for logistic regression with individual intercepts alpha; theta = (alpha, beta)'
 debias.logistic.funk = function(y, X, thetahat) {
@@ -48,7 +97,7 @@ debias.logistic.lasso = function(y, X, betahat) {
 }
 
 # Debias test for linear regression with individual intercepts alpha; theta = (alpha, beta)'
-debias.linear.funk = function(y, X, thetahat, sigmahat) {
+debias.linear.funk = function(y, X, thetahat) {
   
   n = length(y)
   p = ncol(X)
@@ -66,12 +115,18 @@ debias.linear.funk = function(y, X, thetahat, sigmahat) {
   cov.est = M.est%*%sigmahat.est%*%t(M.est)
 
   beta.db = betahat + M.est%*%grad.est
-  ts = as.numeric(sqrt(n)*beta.db/(sigmahat * sqrt(diag(cov.est))))
+  
+  # Estimate Gaussian noise parameter
+#  scal_m = scalreg(X, y)
+  scal_m = scalreg(Xtilde, y)
+  s.hat = scal_m$hsigma
+  
+  ts = as.numeric(sqrt(n)*beta.db/(s.hat * sqrt(diag(cov.est))))
   return(ts)
 }
 
 # Debias test for linear regression with ordinary lasso
-debias.linear.lasso = function(y, X, betahat, sigmahat) {
+debias.linear.lasso = function(y, X, betahat) {
   
   n = length(y)
   p = ncol(X)
@@ -87,7 +142,12 @@ debias.linear.lasso = function(y, X, betahat, sigmahat) {
   cov.est = M.lasso%*%sigmahat.lasso%*%t(M.lasso)
 
   beta.db = betahat + M.lasso%*%grad.lasso
-  ts = as.numeric(sqrt(n)*beta.db/(sigmahat * sqrt(diag(cov.est))))
+  
+  # Estimate Gaussian noise parameter
+  scal_m = scalreg(X, y)
+  s.hat = scal_m$hsigma
+  
+  ts = as.numeric(sqrt(n)*beta.db/(s.hat * sqrt(diag(cov.est))))
   return(ts)
 }
 

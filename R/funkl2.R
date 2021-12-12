@@ -1,6 +1,6 @@
 # Functions to fit funk models with l2 smoothing: training, prediction, cross-validation
 
-funkl2.fit = function(y, X, Ln, Lp, reg_params, model = c("linear", "logistic"), theta_init = NULL, tol = 1e-08, max_iter = 1e7, verbose = FALSE) {
+funkl2.fit = function(y, X, Ln, Lp, reg_params, model = c("linear", "logistic", "poisson"), theta_init = NULL, tol = 1e-08, max_iter = 1e7, verbose = FALSE) {
   
   n = nrow(X)
   p = ncol(X)
@@ -15,9 +15,20 @@ funkl2.fit = function(y, X, Ln, Lp, reg_params, model = c("linear", "logistic"),
   lambda = reg_params[3] # lasso regularization of betas 
   Ln = Ln + 0.01*diag(n)
   
+  if (model == "poisson") {
+    Xtilde = cbind(diag(n), X)
+    XX_eigen = max(eigen(t(Xtilde)%*%Xtilde)$values)
+    
+    Lfull = rbind(cbind(gamma_n*Ln, matrix(0, n, p)), cbind(matrix(0, p, n), gamma_p*Lp))
+    Lpart = base::norm(Lfull, "2")
+    
+    thetahat = as.numeric(funk_l2_poisson_fit(y_m, X, gamma_n*Ln, gamma_p*Lp, lambda, XX_eigen, Lpart, theta_init_m, tol, max_iter, verbose))
+  }  
+  
   if (model == "logistic") {
     thetahat = as.numeric(funk_l2_logistic_fit(y_m, X, gamma_n*Ln, gamma_p*Lp, lambda, theta_init_m, tol, max_iter, verbose))
   }
+  
   if (model == "linear") {
     thetahat = as.numeric(funk_l2_linear_fit(y_m, X, gamma_n*Ln, gamma_p*Lp, lambda, theta_init_m, tol, max_iter, verbose))
   }
@@ -49,15 +60,25 @@ funkl2.predict = function(funkout, Xtest, Ln_full, train_ind) {
   alphatest = as.numeric(-ginv(Ln_22) %*% Ln_21 %*% alphatrain)
   
   eta.test = alphatest + as.numeric(Xtest%*%funkout$betahat)
+  
+  if (funkout$model == "poisson") {
+    out = exp(eta.test)
+  }  
+  
   if (funkout$model == "logistic") {
     out = plogis(eta.test)
   }
+  
   if (funkout$model == "linear") {
     out = eta.test
   }
   
   return(out)
 }
+
+poisson_loss = function(y, yhat) {
+  mean( yhat - y * log(yhat) )
+} 
 
 logistic_dev = function(y, probs) {
   probs[probs > (1-1e-6)] = 1-(1e-6)
@@ -67,7 +88,7 @@ logistic_dev = function(y, probs) {
 
 # CV for a single training-testing split over a parameter grid, with warm starts
 # Grid should have two parameters constant, third one varying and descending 
-funkl2.cv.single = function(y, X, Ln, Lp, reg_grid, train_ind, model = c("linear", "logistic")) {
+funkl2.cv.single = function(y, X, Ln, Lp, reg_grid, train_ind, model = c("linear", "logistic", "poisson")) {
   
   n = nrow(X)
   test_ind = setdiff(1:n, train_ind)
@@ -89,9 +110,14 @@ funkl2.cv.single = function(y, X, Ln, Lp, reg_grid, train_ind, model = c("linear
     }
     pred = funkl2.predict(funk.m, Xtest, Ln, train_ind)
     
+    if (model == "poisson") {
+      err.ests[i] = poisson_loss(ytest, pred)
+    }
+    
     if (model == "logistic") {
       err.ests[i] = logistic_dev(ytest, pred)
     }
+    
     if (model == "linear") {
       err.ests[i] = mean((ytest - pred)^2)
     }
@@ -100,7 +126,7 @@ funkl2.cv.single = function(y, X, Ln, Lp, reg_grid, train_ind, model = c("linear
 }
 
 # Wrap around above, do K times
-funkl2.cv.Kfold = function(y, X, Ln, Lp, reg_grid, foldind, model = c("linear", "logistic")) {
+funkl2.cv.Kfold = function(y, X, Ln, Lp, reg_grid, foldind, model = c("linear", "logistic", "poisson")) {
   n = nrow(X)
   nfolds = max(foldind)
   cv.ests = matrix(nrow = nrow(reg_grid), ncol = nfolds)
@@ -111,7 +137,7 @@ funkl2.cv.Kfold = function(y, X, Ln, Lp, reg_grid, foldind, model = c("linear", 
   return(rowMeans(cv.ests))
 }
 
-funkl2.cv.coorddesc = function(y, X, Ln, Lp, param_list, model = c("linear", "logistic"), nfolds = 5, verb.cv = FALSE) {
+funkl2.cv.coorddesc = function(y, X, Ln, Lp, param_list, model = c("linear", "logistic", "poisson"), nfolds = 5, verb.cv = FALSE) {
   # coordinate descent with warm starts
   n = nrow(X)
   foldind = sample(nfolds, size = n, replace = TRUE) # change to be exactly n/K equal?

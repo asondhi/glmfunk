@@ -65,6 +65,14 @@ grace_l2_linear_fit <- function(Y, X, Lp, lambda, beta_init, tol, max_iter, verb
     .Call(`_glmfunk_grace_l2_linear_fit`, Y, X, Lp, lambda, beta_init, tol, max_iter, verbose)
 }
 
+poisson_funk_l1_opt <- function(Y, X, Ln, Lp, lambda, mu, XX_eigen, Lpart, theta_init, tol, max_iter, verbose) {
+    .Call(`_glmfunk_poisson_funk_l1_opt`, Y, X, Ln, Lp, lambda, mu, XX_eigen, Lpart, theta_init, tol, max_iter, verbose)
+}
+
+funk_l1_poisson_fit <- function(Y, X, Ln, Lp, lambda, mu, XX_eigen, Lpart, theta_init, tol, max_iter, verbose) {
+    .Call(`_glmfunk_funk_l1_poisson_fit`, Y, X, Ln, Lp, lambda, mu, XX_eigen, Lpart, theta_init, tol, max_iter, verbose)
+}
+
 logit_funk_l1_opt <- function(Y, X, Ln, Lp, lambda, mu, L, theta_init, tol, max_iter, verbose) {
     .Call(`_glmfunk_logit_funk_l1_opt`, Y, X, Ln, Lp, lambda, mu, L, theta_init, tol, max_iter, verbose)
 }
@@ -81,6 +89,14 @@ funk_l1_linear_fit <- function(Y, X, Ln, Lp, lambda, mu, L, theta_init, tol, max
     .Call(`_glmfunk_funk_l1_linear_fit`, Y, X, Ln, Lp, lambda, mu, L, theta_init, tol, max_iter, verbose)
 }
 
+poisson_funk_l2_opt <- function(Y, X, L, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose) {
+    .Call(`_glmfunk_poisson_funk_l2_opt`, Y, X, L, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose)
+}
+
+funk_l2_poisson_fit <- function(Y, X, Ln, Lp, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose) {
+    .Call(`_glmfunk_funk_l2_poisson_fit`, Y, X, Ln, Lp, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose)
+}
+
 logit_funk_l2_opt <- function(Y, X, L, lambda, theta_init, tol, max_iter, verbose) {
     .Call(`_glmfunk_logit_funk_l2_opt`, Y, X, L, lambda, theta_init, tol, max_iter, verbose)
 }
@@ -95,6 +111,14 @@ linear_funk_l2_opt <- function(Y, X, L, lambda, theta_init, tol, max_iter, verbo
 
 funk_l2_linear_fit <- function(Y, X, Ln, Lp, lambda, theta_init, tol, max_iter, verbose) {
     .Call(`_glmfunk_funk_l2_linear_fit`, Y, X, Ln, Lp, lambda, theta_init, tol, max_iter, verbose)
+}
+
+poisson_rnc_lasso_opt <- function(Y, X, L, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose) {
+    .Call(`_glmfunk_poisson_rnc_lasso_opt`, Y, X, L, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose)
+}
+
+rnc_lasso_poisson_fit <- function(Y, X, Ln, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose) {
+    .Call(`_glmfunk_rnc_lasso_poisson_fit`, Y, X, Ln, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose)
 }
 
 logit_rnc_lasso_opt <- function(Y, X, L, lambda, theta_init, tol, max_iter, verbose) {

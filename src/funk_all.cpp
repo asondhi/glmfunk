@@ -365,6 +365,87 @@ extern "C" SEXP grace_l2_linear_fit(SEXP Y, SEXP X, SEXP Lp, SEXP lambda, SEXP b
 }
 
 
+// function to solve glm-funk Poisson regression with l1 feature network smoothing
+// [[Rcpp::export]]
+arma::mat poisson_funk_l1_opt(arma::mat Y, arma::mat X, arma::mat Ln, arma::mat Lp, double lambda, double mu, double XX_eigen, double Lpart, arma::mat theta_init, double tol, int max_iter, bool verbose){
+
+    float n = X.n_rows;
+    int p = X.n_cols;
+    int k = Lp.n_rows;
+    int nint = X.n_rows;
+    arma::mat I = arma::eye<arma::mat>(nint,nint);
+    arma::mat X_tilde = arma::join_rows(I,X);
+    
+    int iter = 0;
+    double err = 0;
+    arma::mat theta_curr = theta_init;
+    arma::mat w = theta_curr;
+    double t_curr = 1;
+    double t_prev = 1;
+    bool converge = false;
+
+    while (!converge) {
+        arma::mat eta = X_tilde * w;
+        arma::mat P = exp(eta);
+        double L = Lpart + P.max() * XX_eigen;
+        double st = lambda / L;
+        arma::mat residual = (1/n)*(P - Y);        
+        arma::mat gradient1 = X_tilde.t()*residual;
+
+        arma::mat w_p_submat = w.submat(n, 0, n + p - 1, 0);
+        arma::mat alpha = proj_alpha(Lp, w_p_submat, mu, k);        
+        arma::mat w_n_submat = w.submat(0, 0, n - 1, 0);
+        arma::mat gradient2 = arma::join_cols(Ln*w_n_submat, Lp.t()*alpha);
+        arma::mat gradient = gradient1 + gradient2;
+        
+        arma::mat theta_tmp = w - (1/L)*gradient;
+        arma::mat theta_new = prox_step(theta_tmp, st, nint, p);
+        t_prev = t_curr;
+        t_curr = 2.0/(iter + 3.0);
+        arma::mat wnew = theta_new + (1/t_prev - 1)*t_curr*(theta_new - theta_curr);
+
+        err = arma::abs(theta_new - theta_curr).max();
+        theta_curr = theta_new;
+        w = wnew;
+
+        if (err < tol & iter > 2000) {
+            converge = true;
+        }
+        if(iter == max_iter){
+            if (verbose) {
+                Rcout << "Maximum iteration reached before convergence!" << std::endl;
+            }
+
+            break;
+        }
+        if (verbose) {
+            Rcout << "Finished iteration " << iter << " with relative gap " << err << std::endl;
+        }
+        iter += 1;
+    }
+    return theta_curr;
+}
+
+// wrapper function; penalty parameters should be multiplied into both laplacians; lambda corresponds to lasso penalty
+// [[Rcpp::export]]
+extern "C" SEXP funk_l1_poisson_fit(SEXP Y, SEXP X, SEXP Ln, SEXP Lp, SEXP lambda, SEXP mu, SEXP XX_eigen, SEXP Lpart, SEXP theta_init, SEXP tol, SEXP max_iter, SEXP verbose){
+    arma::mat Xmat=as<arma::mat>(X);
+    arma::mat Lndsmat=as<arma::mat>(Ln);
+    arma::mat Lpdsmat=as<arma::mat>(Lp);
+    arma::mat Ymat=as<arma::mat>(Y);
+    double lambda_num= as<double>(lambda);
+    double XX_eigen_num= as<double>(XX_eigen);
+    double Lpart_num= as<double>(Lpart);
+    double mu_num= as<double>(mu);
+    double tol_num= as<double>(tol);
+    bool verbose_ind= as<bool>(verbose);
+    int iter_max_num= as<int>(max_iter);
+    arma::mat thetamat=as<arma::mat>(theta_init);
+    arma::mat result = poisson_funk_l1_opt(Ymat, Xmat, Lndsmat, Lpdsmat, lambda_num, mu_num, XX_eigen_num, Lpart_num, thetamat, tol_num, iter_max_num, verbose_ind);
+    return(wrap(result));
+}
+
+
 // function to solve glm-funk logistic regression with l1 feature network smoothing
 // [[Rcpp::export]]
 arma::mat logit_funk_l1_opt(arma::mat Y, arma::mat X, arma::mat Ln, arma::mat Lp, double lambda, double mu, double L, arma::mat theta_init, double tol, int max_iter, bool verbose){
@@ -521,6 +602,74 @@ extern "C" SEXP funk_l1_linear_fit(SEXP Y, SEXP X, SEXP Ln, SEXP Lp, SEXP lambda
     return(wrap(result));
 }
 
+
+// function to solve glm-funk Poisson regression with l2 feature network smoothing
+// [[Rcpp::export]]
+arma::mat poisson_funk_l2_opt(arma::mat Y, arma::mat X, arma::sp_mat L, double lambda, double XX_eigen, double Lpart, arma::mat theta_init, double tol, int max_iter, bool verbose){
+
+    int n = X.n_rows;
+    int p = X.n_cols;
+    int iter = 0;
+    double err = 0;
+    arma::mat I = arma::eye<arma::mat>(n,n);
+    arma::mat X_tilde = arma::join_rows(I,X);
+    arma::mat theta_old = theta_init;
+    
+    bool converge = false;
+    while (!converge) {
+        iter += 1;
+        arma::mat eta = X_tilde * theta_old;        
+        arma::mat P = exp(eta);
+        double C_L = Lpart + P.max() * XX_eigen;
+        arma::mat residual = P - Y;
+        arma::mat gradient = X_tilde.t()*residual + L*theta_old;
+        arma::mat theta_tmp = theta_old - (1 / C_L)*gradient;
+        arma::mat theta_new = prox_step(theta_tmp, lambda, n, p);
+        err = arma::norm(theta_new - theta_old,2)/(arma::norm(theta_old,2)+SMOOTH());
+        if (err < tol) {
+            converge = true;
+        }
+        theta_old = theta_new;
+        if(iter == max_iter){
+            if (verbose) {
+                Rcout << "Maximum iteration reached before convergence!" << std::endl;
+            }
+
+            break;
+        }
+        if (verbose) {
+            Rcout << "Finished iteration " << iter << " with relative gap " << err << std::endl;
+        }
+    }
+    return theta_old;
+}
+
+
+// wrapper function; penalty parameters should be multiplied into both laplacians; lambda corresponds to lasso penalty
+// [[Rcpp::export]]
+extern "C" SEXP funk_l2_poisson_fit(SEXP Y, SEXP X, SEXP Ln, SEXP Lp, SEXP lambda, SEXP XX_eigen, SEXP Lpart, SEXP theta_init, SEXP tol, SEXP max_iter, SEXP verbose){
+    arma::mat Xmat=as<arma::mat>(X);
+    arma::mat Lndsmat=as<arma::mat>(Ln);
+    arma::mat Lpdsmat=as<arma::mat>(Lp);
+    int n = Xmat.n_rows;
+    int p = Xmat.n_cols;
+    arma::mat Omega = arma::zeros<arma::mat>(n+p,n+p);
+    Omega(arma::span(0,n-1),arma::span(0,n-1)) = Lndsmat;
+    Omega(arma::span(n,n+p-1),arma::span(n,n+p-1)) = Lpdsmat;
+    arma::sp_mat Lspmat=arma::sp_mat(Omega);
+    arma::mat Ymat=as<arma::mat>(Y);
+    double lambda_num= as<double>(lambda);
+    double XX_eigen_num= as<double>(XX_eigen);
+    double Lpart_num= as<double>(Lpart);    
+    double tol_num= as<double>(tol);
+    bool verbose_ind= as<bool>(verbose);
+    int iter_max_num= as<int>(max_iter);
+    arma::mat thetamat=as<arma::mat>(theta_init);
+    arma::mat result = poisson_funk_l2_opt(Ymat, Xmat, Lspmat, lambda_num, XX_eigen_num, Lpart_num, thetamat, tol_num, iter_max_num, verbose_ind);
+    return(wrap(result));
+}
+
+
 // function to solve glm-funk logistic regression with l2 feature network smoothing
 // [[Rcpp::export]]
 arma::mat logit_funk_l2_opt(arma::mat Y, arma::mat X, arma::sp_mat L, double lambda, arma::mat theta_init, double tol, int max_iter, bool verbose){
@@ -646,6 +795,71 @@ extern "C" SEXP funk_l2_linear_fit(SEXP Y, SEXP X, SEXP Ln, SEXP Lp, SEXP lambda
     arma::mat result = linear_funk_l2_opt(Ymat, Xmat, Lspmat, lambda_num, thetamat, tol_num, iter_max_num, verbose_ind);
     return(wrap(result));
 }
+
+
+// function to solve Poisson regression with network cohesion, when covariates are provided
+// [[Rcpp::export]]
+arma::mat poisson_rnc_lasso_opt(arma::mat Y, arma::mat X, arma::mat L, double lambda, double XX_eigen, double Lpart, arma::mat theta_init, double tol, int max_iter, bool verbose){
+
+    int n = X.n_rows;
+    int p = X.n_cols;
+    int iter = 0;
+    double err = 0;
+    arma::mat I = arma::eye<arma::mat>(n,n);
+    arma::mat X_tilde = arma::join_rows(I,X);
+    arma::mat theta_old = theta_init;
+    
+    bool converge = false;
+    while (!converge) {      
+        iter += 1;
+        arma::mat eta = X_tilde * theta_old;
+        arma::mat P = exp(eta);
+        double C_L = Lpart + P.max() * XX_eigen;
+        arma::mat residual = P - Y;
+        arma::mat gradient = X_tilde.t()*residual + L*theta_old;
+        arma::mat theta_tmp = theta_old - (1 / C_L)*gradient;
+        arma::mat theta_new = prox_step(theta_tmp, lambda, n, p);
+        err = arma::norm(theta_new - theta_old,2)/(arma::norm(theta_old,2)+SMOOTH());
+        if (err < tol) {
+            converge = true;
+        }
+        theta_old = theta_new;
+        if(iter == max_iter){
+            if (verbose) {
+                Rcout << "Maximum iteration reached before convergence!" << std::endl;
+            }
+
+            break;
+        }
+        if (verbose) {
+            Rcout << "Finished iteration " << iter << " with relative gap " << err << std::endl;
+        }
+    }
+    return theta_old;
+}
+
+// penalty parameters should be multiplied into both laplacians; lambda corresponds to lasso penalty
+// [[Rcpp::export]]
+extern "C" SEXP rnc_lasso_poisson_fit(SEXP Y, SEXP X, SEXP Ln, SEXP lambda, SEXP XX_eigen, SEXP Lpart, SEXP theta_init, SEXP tol, SEXP max_iter, SEXP verbose){
+    arma::mat Xmat=as<arma::mat>(X);
+    arma::mat Lndsmat=as<arma::mat>(Ln);
+    int n = Xmat.n_rows;
+    int p = Xmat.n_cols;
+    arma::mat Omega = arma::zeros<arma::mat>(n+p,n+p);
+    Omega(arma::span(0,n-1),arma::span(0,n-1)) = Lndsmat;    
+    arma::mat Ymat=as<arma::mat>(Y);
+    double lambda_num= as<double>(lambda);
+    double XX_eigen_num= as<double>(XX_eigen);
+    double Lpart_num= as<double>(Lpart);    
+    double tol_num= as<double>(tol);
+    bool verbose_ind= as<bool>(verbose);
+    int iter_max_num= as<int>(max_iter);
+    arma::mat thetamat=as<arma::mat>(theta_init);
+    arma::mat result = poisson_rnc_lasso_opt(Ymat, Xmat, Omega, lambda_num, XX_eigen_num, Lpart_num, thetamat, tol_num, iter_max_num, verbose_ind);
+    return(wrap(result));
+}
+
+
 
 // function to solve logistic regression with network cohesion, when covariates are provided
 // [[Rcpp::export]]

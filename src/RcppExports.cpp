@@ -255,6 +255,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// poisson_funk_l1_opt
+arma::mat poisson_funk_l1_opt(arma::mat Y, arma::mat X, arma::mat Ln, arma::mat Lp, double lambda, double mu, double XX_eigen, double Lpart, arma::mat theta_init, double tol, int max_iter, bool verbose);
+RcppExport SEXP _glmfunk_poisson_funk_l1_opt(SEXP YSEXP, SEXP XSEXP, SEXP LnSEXP, SEXP LpSEXP, SEXP lambdaSEXP, SEXP muSEXP, SEXP XX_eigenSEXP, SEXP LpartSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Ln(LnSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Lp(LpSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type XX_eigen(XX_eigenSEXP);
+    Rcpp::traits::input_parameter< double >::type Lpart(LpartSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type theta_init(theta_initSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(poisson_funk_l1_opt(Y, X, Ln, Lp, lambda, mu, XX_eigen, Lpart, theta_init, tol, max_iter, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// funk_l1_poisson_fit
+extern "C" SEXP funk_l1_poisson_fit(SEXP Y, SEXP X, SEXP Ln, SEXP Lp, SEXP lambda, SEXP mu, SEXP XX_eigen, SEXP Lpart, SEXP theta_init, SEXP tol, SEXP max_iter, SEXP verbose);
+RcppExport SEXP _glmfunk_funk_l1_poisson_fit(SEXP YSEXP, SEXP XSEXP, SEXP LnSEXP, SEXP LpSEXP, SEXP lambdaSEXP, SEXP muSEXP, SEXP XX_eigenSEXP, SEXP LpartSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type X(XSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Ln(LnSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Lp(LpSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type XX_eigen(XX_eigenSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Lpart(LpartSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type theta_init(theta_initSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(funk_l1_poisson_fit(Y, X, Ln, Lp, lambda, mu, XX_eigen, Lpart, theta_init, tol, max_iter, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // logit_funk_l1_opt
 arma::mat logit_funk_l1_opt(arma::mat Y, arma::mat X, arma::mat Ln, arma::mat Lp, double lambda, double mu, double L, arma::mat theta_init, double tol, int max_iter, bool verbose);
 RcppExport SEXP _glmfunk_logit_funk_l1_opt(SEXP YSEXP, SEXP XSEXP, SEXP LnSEXP, SEXP LpSEXP, SEXP lambdaSEXP, SEXP muSEXP, SEXP LSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
@@ -339,6 +383,47 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// poisson_funk_l2_opt
+arma::mat poisson_funk_l2_opt(arma::mat Y, arma::mat X, arma::sp_mat L, double lambda, double XX_eigen, double Lpart, arma::mat theta_init, double tol, int max_iter, bool verbose);
+RcppExport SEXP _glmfunk_poisson_funk_l2_opt(SEXP YSEXP, SEXP XSEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP XX_eigenSEXP, SEXP LpartSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat >::type L(LSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type XX_eigen(XX_eigenSEXP);
+    Rcpp::traits::input_parameter< double >::type Lpart(LpartSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type theta_init(theta_initSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(poisson_funk_l2_opt(Y, X, L, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// funk_l2_poisson_fit
+extern "C" SEXP funk_l2_poisson_fit(SEXP Y, SEXP X, SEXP Ln, SEXP Lp, SEXP lambda, SEXP XX_eigen, SEXP Lpart, SEXP theta_init, SEXP tol, SEXP max_iter, SEXP verbose);
+RcppExport SEXP _glmfunk_funk_l2_poisson_fit(SEXP YSEXP, SEXP XSEXP, SEXP LnSEXP, SEXP LpSEXP, SEXP lambdaSEXP, SEXP XX_eigenSEXP, SEXP LpartSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type X(XSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Ln(LnSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Lp(LpSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type XX_eigen(XX_eigenSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Lpart(LpartSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type theta_init(theta_initSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(funk_l2_poisson_fit(Y, X, Ln, Lp, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // logit_funk_l2_opt
 arma::mat logit_funk_l2_opt(arma::mat Y, arma::mat X, arma::sp_mat L, double lambda, arma::mat theta_init, double tol, int max_iter, bool verbose);
 RcppExport SEXP _glmfunk_logit_funk_l2_opt(SEXP YSEXP, SEXP XSEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
@@ -413,6 +498,46 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// poisson_rnc_lasso_opt
+arma::mat poisson_rnc_lasso_opt(arma::mat Y, arma::mat X, arma::mat L, double lambda, double XX_eigen, double Lpart, arma::mat theta_init, double tol, int max_iter, bool verbose);
+RcppExport SEXP _glmfunk_poisson_rnc_lasso_opt(SEXP YSEXP, SEXP XSEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP XX_eigenSEXP, SEXP LpartSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type L(LSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type XX_eigen(XX_eigenSEXP);
+    Rcpp::traits::input_parameter< double >::type Lpart(LpartSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type theta_init(theta_initSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(poisson_rnc_lasso_opt(Y, X, L, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rnc_lasso_poisson_fit
+extern "C" SEXP rnc_lasso_poisson_fit(SEXP Y, SEXP X, SEXP Ln, SEXP lambda, SEXP XX_eigen, SEXP Lpart, SEXP theta_init, SEXP tol, SEXP max_iter, SEXP verbose);
+RcppExport SEXP _glmfunk_rnc_lasso_poisson_fit(SEXP YSEXP, SEXP XSEXP, SEXP LnSEXP, SEXP lambdaSEXP, SEXP XX_eigenSEXP, SEXP LpartSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type X(XSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Ln(LnSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type XX_eigen(XX_eigenSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Lpart(LpartSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type theta_init(theta_initSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(rnc_lasso_poisson_fit(Y, X, Ln, lambda, XX_eigen, Lpart, theta_init, tol, max_iter, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // logit_rnc_lasso_opt
 arma::mat logit_rnc_lasso_opt(arma::mat Y, arma::mat X, arma::mat L, double lambda, arma::mat theta_init, double tol, int max_iter, bool verbose);
 RcppExport SEXP _glmfunk_logit_rnc_lasso_opt(SEXP YSEXP, SEXP XSEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP theta_initSEXP, SEXP tolSEXP, SEXP max_iterSEXP, SEXP verboseSEXP) {
@@ -484,4 +609,47 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(rnc_lasso_linear_fit(Y, X, Ln, lambda, theta_init, tol, max_iter, verbose));
     return rcpp_result_gen;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_glmfunk_SMOOTH", (DL_FUNC) &_glmfunk_SMOOTH, 0},
+    {"_glmfunk_loglike_bernoulli", (DL_FUNC) &_glmfunk_loglike_bernoulli, 2},
+    {"_glmfunk_logit_p", (DL_FUNC) &_glmfunk_logit_p, 1},
+    {"_glmfunk_proj_one", (DL_FUNC) &_glmfunk_proj_one, 1},
+    {"_glmfunk_soft_thresh", (DL_FUNC) &_glmfunk_soft_thresh, 2},
+    {"_glmfunk_prox_step", (DL_FUNC) &_glmfunk_prox_step, 4},
+    {"_glmfunk_proj_alpha", (DL_FUNC) &_glmfunk_proj_alpha, 4},
+    {"_glmfunk_prox_step_grace", (DL_FUNC) &_glmfunk_prox_step_grace, 3},
+    {"_glmfunk_logit_grace_l1_opt", (DL_FUNC) &_glmfunk_logit_grace_l1_opt, 10},
+    {"_glmfunk_grace_l1_logistic_fit", (DL_FUNC) &_glmfunk_grace_l1_logistic_fit, 10},
+    {"_glmfunk_linear_grace_l1_opt", (DL_FUNC) &_glmfunk_linear_grace_l1_opt, 10},
+    {"_glmfunk_grace_l1_linear_fit", (DL_FUNC) &_glmfunk_grace_l1_linear_fit, 10},
+    {"_glmfunk_logit_grace_l2_opt", (DL_FUNC) &_glmfunk_logit_grace_l2_opt, 8},
+    {"_glmfunk_grace_l2_logistic_fit", (DL_FUNC) &_glmfunk_grace_l2_logistic_fit, 8},
+    {"_glmfunk_linear_grace_l2_opt", (DL_FUNC) &_glmfunk_linear_grace_l2_opt, 8},
+    {"_glmfunk_grace_l2_linear_fit", (DL_FUNC) &_glmfunk_grace_l2_linear_fit, 8},
+    {"_glmfunk_poisson_funk_l1_opt", (DL_FUNC) &_glmfunk_poisson_funk_l1_opt, 12},
+    {"_glmfunk_funk_l1_poisson_fit", (DL_FUNC) &_glmfunk_funk_l1_poisson_fit, 12},
+    {"_glmfunk_logit_funk_l1_opt", (DL_FUNC) &_glmfunk_logit_funk_l1_opt, 11},
+    {"_glmfunk_funk_l1_logistic_fit", (DL_FUNC) &_glmfunk_funk_l1_logistic_fit, 11},
+    {"_glmfunk_linear_funk_l1_opt", (DL_FUNC) &_glmfunk_linear_funk_l1_opt, 11},
+    {"_glmfunk_funk_l1_linear_fit", (DL_FUNC) &_glmfunk_funk_l1_linear_fit, 11},
+    {"_glmfunk_poisson_funk_l2_opt", (DL_FUNC) &_glmfunk_poisson_funk_l2_opt, 10},
+    {"_glmfunk_funk_l2_poisson_fit", (DL_FUNC) &_glmfunk_funk_l2_poisson_fit, 11},
+    {"_glmfunk_logit_funk_l2_opt", (DL_FUNC) &_glmfunk_logit_funk_l2_opt, 8},
+    {"_glmfunk_funk_l2_logistic_fit", (DL_FUNC) &_glmfunk_funk_l2_logistic_fit, 9},
+    {"_glmfunk_linear_funk_l2_opt", (DL_FUNC) &_glmfunk_linear_funk_l2_opt, 8},
+    {"_glmfunk_funk_l2_linear_fit", (DL_FUNC) &_glmfunk_funk_l2_linear_fit, 9},
+    {"_glmfunk_poisson_rnc_lasso_opt", (DL_FUNC) &_glmfunk_poisson_rnc_lasso_opt, 10},
+    {"_glmfunk_rnc_lasso_poisson_fit", (DL_FUNC) &_glmfunk_rnc_lasso_poisson_fit, 10},
+    {"_glmfunk_logit_rnc_lasso_opt", (DL_FUNC) &_glmfunk_logit_rnc_lasso_opt, 8},
+    {"_glmfunk_rnc_lasso_logistic_fit", (DL_FUNC) &_glmfunk_rnc_lasso_logistic_fit, 8},
+    {"_glmfunk_linear_rnc_lasso_opt", (DL_FUNC) &_glmfunk_linear_rnc_lasso_opt, 8},
+    {"_glmfunk_rnc_lasso_linear_fit", (DL_FUNC) &_glmfunk_rnc_lasso_linear_fit, 8},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_glmfunk(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }

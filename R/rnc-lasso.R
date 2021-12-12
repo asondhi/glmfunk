@@ -1,6 +1,6 @@
-# Functions to fit borg models: training, prediction, cross-validation, inference via debiasing
+# Functions to fit rnc-lasso models: training, prediction, cross-validation, inference via debiasing
 
-rnc.lasso.fit = function(y, X, Ln, reg_params, model = c("linear", "logistic"), theta_init = NULL, tol = 1e-08, max_iter = 1e5, verbose = FALSE) {
+rnc.lasso.fit = function(y, X, Ln, reg_params, model = c("linear", "logistic", "poisson"), theta_init = NULL, tol = 1e-08, max_iter = 1e7, verbose = FALSE) {
   
   n = nrow(X)
   p = ncol(X)
@@ -14,10 +14,19 @@ rnc.lasso.fit = function(y, X, Ln, reg_params, model = c("linear", "logistic"), 
   lambda = reg_params[2] # lasso regularization of betas 
   Ln = Ln + 0.01*diag(n)
   
+  if (model == "poisson") {
+    Xtilde = cbind(diag(n), X)
+    XX_eigen = max(eigen(t(Xtilde)%*%Xtilde)$values)
+    
+    Lpart = base::norm(Ln, "2")
+    
+    thetahat = as.numeric(rnc_lasso_poisson_fit(y_m, X, gamma_n*Ln, lambda, XX_eigen, Lpart, theta_init_m, tol, max_iter, verbose))
+  }
   
   if (model == "logistic") {
     thetahat = as.numeric(rnc_lasso_logistic_fit(y_m, X, gamma_n*Ln, lambda, theta_init_m, tol, max_iter, verbose))
   }
+  
   if (model == "linear") {
     thetahat = as.numeric(rnc_lasso_linear_fit(y_m, X, gamma_n*Ln, lambda, theta_init_m, tol, max_iter, verbose))
   }  
@@ -49,15 +58,25 @@ rnc.lasso.predict = function(funkout, Xtest, Ln_full, train_ind) {
   alphatest = as.numeric(-ginv(Ln_22) %*% Ln_21 %*% alphatrain)
   
   eta.test = alphatest + as.numeric(Xtest%*%funkout$betahat)
+  
+  if (funkout$model == "poisson") {
+    out = exp(eta.test)
+  }
+
   if (funkout$model == "logistic") {
     out = plogis(eta.test)
   }
+  
   if (funkout$model == "linear") {
     out = eta.test
   }
   
   return(out)
 }
+
+poisson_loss = function(y, yhat) {
+  mean( yhat - y * log(yhat) )
+} 
 
 logistic_dev = function(y, probs) {
   probs[probs > (1-1e-6)] = 1-(1e-6)
@@ -67,7 +86,7 @@ logistic_dev = function(y, probs) {
 
 # CV for a single training-testing split over a parameter grid, with warm starts
 # Grid should have two parameters constant, third one varying and descending 
-rnc.lasso.cv.single = function(y, X, Ln, reg_grid, train_ind, model = c("linear", "logistic")) {
+rnc.lasso.cv.single = function(y, X, Ln, reg_grid, train_ind, model = c("linear", "logistic", "poisson")) {
   
   n = nrow(X)
   test_ind = setdiff(1:n, train_ind)
@@ -89,9 +108,14 @@ rnc.lasso.cv.single = function(y, X, Ln, reg_grid, train_ind, model = c("linear"
     }
     pred = rnc.lasso.predict(rnc.m, Xtest, Ln, train_ind)
 
+    if (model == "poisson") {
+      err.ests[i] = poisson_loss(ytest, pred)
+    }
+
     if (model == "logistic") {
       err.ests[i] = logistic_dev(ytest, pred)
     }
+    
     if (model == "linear") {
       err.ests[i] = mean((ytest - pred)^2)
     }
@@ -100,7 +124,7 @@ rnc.lasso.cv.single = function(y, X, Ln, reg_grid, train_ind, model = c("linear"
 }
 
 # Wrap around above, do K times
-rnc.lasso.cv.Kfold = function(y, X, Ln, reg_grid, foldind, model = c("linear", "logistic")) {
+rnc.lasso.cv.Kfold = function(y, X, Ln, reg_grid, foldind, model = c("linear", "logistic", "poisson")) {
   n = nrow(X)
   nfolds = max(foldind)
   cv.ests = matrix(nrow = nrow(reg_grid), ncol = nfolds)
@@ -111,7 +135,7 @@ rnc.lasso.cv.Kfold = function(y, X, Ln, reg_grid, foldind, model = c("linear", "
   return(rowMeans(cv.ests))
 }
 
-rnc.lasso.cv.coorddesc = function(y, X, Ln, param_list, model = c("linear", "logistic"), nfolds = 5, verb.cv = FALSE) {
+rnc.lasso.cv.coorddesc = function(y, X, Ln, param_list, model = c("linear", "logistic", "poisson"), nfolds = 5, verb.cv = FALSE) {
   # coordinate descent with warm starts
   n = nrow(X)
   foldind = sample(nfolds, size = n, replace = TRUE) # change to be exactly n/K equal?
@@ -150,4 +174,3 @@ rnc.lasso.cv.coorddesc = function(y, X, Ln, param_list, model = c("linear", "log
   minerr = rnc.lasso.cv.Kfold(y, X, Ln, t(as.matrix(reg_params_curr)), foldind, model)
   return(list(reg_params_curr, minerr))  
 }
-
