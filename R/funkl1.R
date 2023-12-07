@@ -181,8 +181,8 @@ funkl1.cv.coorddesc = function(y, X, Ln, Lp, param_list, model = c("linear", "lo
       print(paste0("New params: ", paste0(reg_params_new, collapse = " ")))
     }
     reg_params_curr = reg_params_new
-    cvg = (step < 1e-04 || iter >= 10)
+    cvg = (step < 1e-04 || iter >= 20)
   }
   minerr = funkl1.cv.Kfold(y, X, Ln, Lp, t(as.matrix(reg_params_curr)), foldind, model)
-  return(list(reg_params_curr, minerr))
+  return(list(reg_params_curr, minerr, iter))
 }

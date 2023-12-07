@@ -1,5 +1,5 @@
 # Debias test for Poisson regression with individual intercepts alpha; theta = (alpha, beta)'
-debias.poisson.funk = function(y, X, thetahat) {
+debias.poisson.funk = function(y, X, thetahat, mu) {
   
   n = length(y)
   p = ncol(X)
@@ -11,16 +11,46 @@ debias.poisson.funk = function(y, X, thetahat) {
   grad.est = as.numeric(t(X)%*%(y - mu.est))/n
   
   # Hessian term
-  W.est = diag(mu.est)
+  W.est = (y - mu.est) %*% t(y - mu.est) # sandwich
   sigmahat.est = t(X)%*%W.est%*%X/n
-  M.est = InverseLinfty(sigma = sigmahat.est, n = n, resol=1.5, mu=NULL, maxiter=50, threshold=1e-2, verbose = FALSE)
   
+  M.est = InverseLinfty(sigma = sigmahat.est, n = n, resol=1.5, mu=mu, maxiter=50, threshold=1e-2, verbose = FALSE)
+
   # Asymptotic covariance matrix 
   cov.est = M.est%*%sigmahat.est%*%t(M.est)
   
   beta.db = betahat + M.est%*%grad.est
   ts = as.numeric(sqrt(n)*beta.db/sqrt(diag(cov.est)))
   return(ts)
+}
+
+debias.poisson.funk.ci = function(y, X, thetahat, mu) {
+  
+  n = length(y)
+  p = ncol(X)
+  Xtilde = cbind(diag(n), X)
+  betahat = thetahat[-(1:n)]
+  
+  # Gradient term
+  mu.est = exp(as.numeric(Xtilde%*%thetahat))
+  grad.est = as.numeric(t(X)%*%(y - mu.est))/n
+  
+  # Hessian term
+  W.est = (y - mu.est) %*% t(y - mu.est) # sandwich
+  sigmahat.est = t(X)%*%W.est%*%X/n
+  
+  M.est = InverseLinfty(sigma = sigmahat.est, n = n, resol=1.5, mu=mu, maxiter=50, threshold=1e-2, verbose = FALSE)
+  
+  # Asymptotic covariance matrix 
+  cov.est = M.est%*%sigmahat.est%*%t(M.est)
+  
+  beta.db = betahat + M.est%*%grad.est
+  
+  ci_lower = beta.db - 1.96 * sqrt(diag(cov.est))/sqrt(n)
+  ci_upper = beta.db + 1.96 * sqrt(diag(cov.est))/sqrt(n)
+  ci = as.data.frame(cbind(ci_lower, ci_upper))
+  
+  return(ci)
 }
 
 
@@ -31,11 +61,12 @@ debias.poisson.lasso = function(y, X, betahat) {
   p = ncol(X)
 
   # Gradient term
-  mu.lasso = exp(as.numeric(Xtilde%*%thetahat))
+  mu.lasso = exp(as.numeric(X%*%betahat))
   grad.lasso = as.numeric(t(X)%*%(y - mu.lasso))/n
 
   # Hessian term
-  W.lasso = diag(mu.lasso)
+  #  W.lasso = diag(mu.lasso)
+  W.lasso = (y - mu.lasso) %*% t(y - mu.lasso) # sandwich
   sigmahat.lasso = t(X)%*%W.lasso%*%X/n
   M.lasso = InverseLinfty(sigma = sigmahat.lasso, n = n, resol=1.5, mu=NULL, maxiter=50, threshold=1e-2, verbose = FALSE)
 
@@ -45,6 +76,33 @@ debias.poisson.lasso = function(y, X, betahat) {
   beta.db = betahat + M.lasso%*%grad.lasso
   ts = as.numeric(sqrt(n)*beta.db/sqrt(diag(cov.est)))
   return(ts)
+}
+
+debias.poisson.lasso.ci = function(y, X, betahat) {
+  
+  n = length(y)
+  p = ncol(X)
+  
+  # Gradient term
+  mu.lasso = exp(as.numeric(X%*%betahat))
+  grad.lasso = as.numeric(t(X)%*%(y - mu.lasso))/n
+  
+  # Hessian term
+  #  W.lasso = diag(mu.lasso)
+  W.lasso = (y - mu.lasso) %*% t(y - mu.lasso) # sandwich
+  sigmahat.lasso = t(X)%*%W.lasso%*%X/n
+  M.lasso = InverseLinfty(sigma = sigmahat.lasso, n = n, resol=1.5, mu=NULL, maxiter=50, threshold=1e-2, verbose = FALSE)
+  
+  # Asymptotic covariance matrix 
+  cov.est = M.lasso%*%sigmahat.lasso%*%t(M.lasso)
+  
+  beta.db = betahat + M.lasso%*%grad.lasso
+  
+  ci_lower = beta.db - 1.96 * sqrt(diag(cov.est))/sqrt(n)
+  ci_upper = beta.db + 1.96 * sqrt(diag(cov.est))/sqrt(n)
+  ci = as.data.frame(cbind(ci_lower, ci_upper))
+  
+  return(ci)
 }
 
 
